@@ -31,7 +31,7 @@ typedef struct datos_hilo_t {
     int filtro;
     int inicio;
     int fin;
-    int opcion
+    int opcion;
 } datos_hilo_t;
 
 BMP img;
@@ -42,9 +42,8 @@ BMP img;
 void abrir_imagen(BMP *imagen, char ruta[]);    // Función para abrir la imagen BMP
 void crear_imagen(BMP *imagen, char ruta[]);    // Función para crear una imagen BMP
 void convertir_imagen(BMP *imagen, int nhilos,int opcion); // 2 sera el numero de hilos
-void *filtro1(BMP *imagen);
-void *filtro2(BMP *imagen);
-void *filtro3(BMP *imagen);
+
+void *filtro(void *arg);
 
 
 int main(int argc, char *argv[])
@@ -356,33 +355,33 @@ void crear_imagen(BMP *imagen, char ruta[])
 }
 
 
-void *filtro1(BMP *imagen){
+// void *filtro1(BMP *imagen){
 
-    int i,j,k;  
-    unsigned char temp;
+//     int i,j,k;  
+//     unsigned char temp;
 
-        for (i=0;i<imagen->alto;i++) {
-            for (j=0;j<imagen->ancho;j++) {  
-                temp = (unsigned char)((imagen->pixel[i][j][2]*0.3)+(imagen->pixel[i][j][1]*0.59)+ (imagen->pixel[i][j][0]*0.11));
-                for (k=0;k<3;k++) imagen->pixel[i][j][k]= (unsigned char)temp; 	//Formula correcta
-            }   
-        }
+//         for (i=0;i<imagen->alto;i++) {
+//             for (j=0;j<imagen->ancho;j++) {  
+//                 temp = (unsigned char)((imagen->pixel[i][j][2]*0.3)+(imagen->pixel[i][j][1]*0.59)+ (imagen->pixel[i][j][0]*0.11));
+//                 for (k=0;k<3;k++) imagen->pixel[i][j][k]= (unsigned char)temp; 	//Formula correcta
+//             }   
+//         }
 
     
 
-}
+// }
 
-void *filtro2(BMP *imagen){
+// void *filtro2(BMP *imagen){
 
-    int i,j,k;  
-    unsigned char temp;
+//     int i,j,k;  
+//     unsigned char temp;
 
-}
+// }
 
 
-void *filtro3(BMP *imagen){
+// void *filtro3(BMP *imagen){
 
-    int i,j,k;  
-    unsigned char temp;
+//     int i,j,k;  
+//     unsigned char temp;
 
-}
+// }
