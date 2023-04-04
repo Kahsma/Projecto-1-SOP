@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 #include <pthread.h>
 
 
@@ -31,7 +32,7 @@ typedef struct datos_hilo_t {
     int filtro;
     int inicio;
     int fin;
-    int opcion
+    int opcion;
 } datos_hilo_t;
 
 BMP img;
@@ -42,46 +43,106 @@ BMP img;
 void abrir_imagen(BMP *imagen, char ruta[]);    // Función para abrir la imagen BMP
 void crear_imagen(BMP *imagen, char ruta[]);    // Función para crear una imagen BMP
 void convertir_imagen(BMP *imagen, int nhilos,int opcion); // 2 sera el numero de hilos
-void *filtro1(BMP *imagen);
-void *filtro2(BMP *imagen);
-void *filtro3(BMP *imagen);
+
+void *filtro(void *arg);
 
 
 int main(int argc, char *argv[])
 {
 
-    if (argc != 9)
-    {
-        printf("Los argumentos del progrma son los siguientes: ./imgconc –i [Imagen de entrada] –t [Imagen de salida] –o [Opción (1,2 o 3)] –h [Numero de hilos]");
-        exit(1);
+    // if (argc != 9)
+    // {
+    //     printf("Los argumentos del progrma son los siguientes: ./imgconc –i [Imagen de entrada] –t [Imagen de salida] –o [Opción (1,2 o 3)] –h [Numero de hilos]");
+    //     exit(1);
+    // }
+
+    // if ((strcmp(argv[1], "-i")!= 0) )
+    // {
+    //     printf("El argumento para la imagen de entrada es '-i' ");
+    //     exit(1);
+    // }
+
+    // if ((strcmp(argv[3], "-t") != 0) )
+    // {
+    //     printf("El argumento para la imagen de salida es '-t' ");
+    //     exit(1);
+    // }
+    // if ((strcmp(argv[5], "-o") != 0))
+    // {
+    //     printf("El argumento para la opción de filtro es '-o' ");
+    //     exit(1);
+    // }
+    // if ((strcmp(argv[7], "-h") != 0))
+    // {
+    //     printf("El argumento para el numero de hilos es '-h' ");
+    //     exit(1);
+    // }
+
+    // char *nomImagenEntrada = argv[2];
+    // char *nomImagenSalida = argv[4];
+    // int filtro = atoi(argv[6]);
+    // int nHilos = atoi(argv[8]);
+
+
+
+    char* nomImagenEntrada = NULL;
+    char* nomImagenSalida = NULL;
+    int filtro = 0;
+    int nHilos = 0;
+
+    if (argc != 9) {
+        printf("Invalid number of arguments. Usage: ./imgconc –i imagenIn –t imagenOut –o opción –h nhilos\n");
+        return 1;
     }
 
-    if ((strcmp(argv[1], "-i")!= 0) )
-    {
-        printf("El argumento para la imagen de entrada es '-i' ");
-        exit(1);
+    for (int i = 1; i < argc; i += 2) {
+        if (strcmp(argv[i], "-i") == 0) {
+            nomImagenEntrada = argv[i+1];
+        } else if (strcmp(argv[i], "-t") == 0) {
+            nomImagenSalida = argv[i+1];
+        } else if (strcmp(argv[i], "-o") == 0) {
+            filtro = atoi(argv[i+1]);
+        } else if (strcmp(argv[i], "-h") == 0) {
+            nHilos = atoi(argv[i+1]);
+        } else {
+            printf("Invalid argument: %s\n", argv[i]);
+            return 1;
+        }
     }
 
-    if ((strcmp(argv[3], "-t") != 0) )
-    {
-        printf("El argumento para la imagen de salida es '-t' ");
-        exit(1);
-    }
-    if ((strcmp(argv[5], "-o") != 0))
-    {
-        printf("El argumento para la opción de filtro es '-o' ");
-        exit(1);
-    }
-    if ((strcmp(argv[7], "-h") != 0))
-    {
-        printf("El argumento para el numero de hilos es '-h' ");
-        exit(1);
+    if (!nomImagenEntrada || !nomImagenSalida || !filtro || nHilos <= 0) {
+        printf("Missing or invalid arguments. Usage: ./imgconc –i imagenIn –t imagenOut –o opción –h nhilos\n");
+        return 1;
     }
 
-    char *nomImagenEntrada = argv[2];
-    char *nomImagenSalida = argv[4];
-    int filtro = atoi(argv[6]);
-    int nHilos = atoi(argv[8]);
+   
+    char *extension = ".bmp"; // Extension to check for
+    
+    int len_filename = strlen(nomImagenEntrada); // Get the length of the filename string
+    int len_extension = strlen(extension); // Get the length of the extension string
+    
+    if (len_filename >= len_extension && !strcmp(nomImagenEntrada + len_filename - len_extension, extension)) {
+        printf("El archivo de entrada termina con %s\n", extension);
+    } else {
+        printf("El archivo de entrada no termina con  %s\n", extension);
+        return 1;
+    }
+
+    len_filename = strlen(nomImagenSalida);
+
+    if (len_filename >= len_extension && !strcmp(nomImagenSalida + len_filename - len_extension, extension)) {
+        printf("El archivo de salida termina con %s\n", extension);
+    } else {
+        printf("El archivo de salida no termina con  %s\n", extension);
+        return 1;
+    }
+
+
+
+
+    // Process the images and filtros with the given number of threads
+
+    
     abrir_imagen(&img,nomImagenEntrada);
     printf("\n*************************************************************************");
 	printf("\nIMAGEN: %s",nomImagenEntrada);
@@ -295,8 +356,25 @@ void *filtro(void *arg)
     {
         for (int j = 0; j < imagen->ancho; j++)
         {
+            if (opcion==1)
+            {
                 temp = (unsigned char)((imagen->pixel[i][j][2]*0.3)+(imagen->pixel[i][j][1]*0.59)+ (imagen->pixel[i][j][0]*0.11));
                 for (k=0;k<3;k++) imagen->pixel[i][j][k]= (unsigned char)temp; 	//Formula correcta
+
+            }if (opcion==2)
+            {
+                temp = (unsigned char)(((imagen->pixel[i][j][2])+(imagen->pixel[i][j][1])+ (imagen->pixel[i][j][0]))/3);
+                for (k=0;k<3;k++) imagen->pixel[i][j][k]= (unsigned char)temp;
+                
+            }if(opcion == 3){
+
+                
+                for (k=0;k<3;k++) imagen->pixel[i][j][k]= 255-imagen->pixel[i][j][k]; 
+
+            }
+            
+            
+
             // Procesar pixel (i,j) de la imagen según la opción de filtro elegida
             // ...
         }
@@ -356,33 +434,33 @@ void crear_imagen(BMP *imagen, char ruta[])
 }
 
 
-void *filtro1(BMP *imagen){
+// void *filtro1(BMP *imagen){
 
-    int i,j,k;  
-    unsigned char temp;
+//     int i,j,k;  
+//     unsigned char temp;
 
-        for (i=0;i<imagen->alto;i++) {
-            for (j=0;j<imagen->ancho;j++) {  
-                temp = (unsigned char)((imagen->pixel[i][j][2]*0.3)+(imagen->pixel[i][j][1]*0.59)+ (imagen->pixel[i][j][0]*0.11));
-                for (k=0;k<3;k++) imagen->pixel[i][j][k]= (unsigned char)temp; 	//Formula correcta
-            }   
-        }
+//         for (i=0;i<imagen->alto;i++) {
+//             for (j=0;j<imagen->ancho;j++) {  
+//                 temp = (unsigned char)((imagen->pixel[i][j][2]*0.3)+(imagen->pixel[i][j][1]*0.59)+ (imagen->pixel[i][j][0]*0.11));
+//                 for (k=0;k<3;k++) imagen->pixel[i][j][k]= (unsigned char)temp; 	//Formula correcta
+//             }   
+//         }
 
     
 
-}
+// }
 
-void *filtro2(BMP *imagen){
+// void *filtro2(BMP *imagen){
 
-    int i,j,k;  
-    unsigned char temp;
+//     int i,j,k;  
+//     unsigned char temp;
 
-}
+// }
 
 
-void *filtro3(BMP *imagen){
+// void *filtro3(BMP *imagen){
 
-    int i,j,k;  
-    unsigned char temp;
+//     int i,j,k;  
+//     unsigned char temp;
 
-}
+// }
