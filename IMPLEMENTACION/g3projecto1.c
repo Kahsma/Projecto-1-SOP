@@ -294,8 +294,25 @@ void *filtro(void *arg)
     {
         for (int j = 0; j < imagen->ancho; j++)
         {
+            if (opcion==1)
+            {
                 temp = (unsigned char)((imagen->pixel[i][j][2]*0.3)+(imagen->pixel[i][j][1]*0.59)+ (imagen->pixel[i][j][0]*0.11));
                 for (k=0;k<3;k++) imagen->pixel[i][j][k]= (unsigned char)temp; 	//Formula correcta
+
+            }if (opcion==2)
+            {
+                temp = (unsigned char)(((imagen->pixel[i][j][2])+(imagen->pixel[i][j][1])+ (imagen->pixel[i][j][0]))/3);
+                for (k=0;k<3;k++) imagen->pixel[i][j][k]= (unsigned char)temp;
+                
+            }if(opcion == 3){
+
+                
+                for (k=0;k<3;k++) imagen->pixel[i][j][k]= 255-imagen->pixel[i][j][k]; 
+
+            }
+            
+            
+
             // Procesar pixel (i,j) de la imagen según la opción de filtro elegida
             // ...
         }
