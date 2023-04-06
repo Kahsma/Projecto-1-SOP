@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (filtro != 1 || filtro != 2 || filtro != 3)
+    if (filtro != 1 && filtro != 2 && filtro != 3)
     {
         printf("Las opciones de filtro son: 1 -> Escala de grises, 2-> Blanco y negro & 3-> negativo ");
         return 1;
