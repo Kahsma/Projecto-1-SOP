@@ -151,9 +151,9 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (filtro != 1 && filtro != 2 && filtro != 3)
+    if (filtro != 1 && filtro != 2 && filtro != 3 && filtro != 4)
     {
-        printf("Las opciones de filtro son: 1 -> Escala de grises, 2-> Blanco y negro & 3-> negativo ");
+        printf("Las opciones de filtro son: 1 -> Escala de grises, 2-> Blanco y negro & 3-> realce ");
         return 1;
     }
 
@@ -318,23 +318,32 @@ void abrir_imagen(BMP *imagen, char *ruta)
 void convertir_imagen(BMP *imagen, int nHilos, int opcion)
 {
     pthread_t hilos[nHilos];
-    int altura_seccion = imagen->alto / nHilos;
+    int altura_seccion = imagen->alto;
     int resto = imagen->alto % nHilos;
+    int inicio = 0, final = 0;
+    int alturaAux = altura_seccion;
 
     for (int i = 0; i < nHilos; i++)
     {
-        int inicio = i * altura_seccion;
-        int fin = inicio + altura_seccion;
-        if (i == nHilos - 1) // En el último hilo, procesamos también el resto
+
+        inicio = final;
+        if (alturaAux % nHilos != 0)
         {
-            fin += resto;
+            alturaAux -= 1;
+            final += (alturaAux / nHilos) + 1;
         }
+        else
+        {
+            final += (alturaAux / nHilos);
+        }
+
+        printf("Inicio es: %d y Final es: %d \n", inicio, final);
         // Creamos una estructura de datos que contendrá los datos necesarios
         // para que el hilo procese su sección de la imagen
         datos_hilo_t *datos_hilo = malloc(sizeof(datos_hilo_t));
         datos_hilo->imagen = imagen;
         datos_hilo->inicio = inicio;
-        datos_hilo->fin = fin;
+        datos_hilo->fin = final;
         datos_hilo->opcion = opcion;
         pthread_create(&hilos[i], NULL, filtro, datos_hilo);
     }
@@ -354,6 +363,8 @@ void *filtro(void *arg)
     int opcion = datos_hilo->opcion;
     unsigned char temp;
     int k;
+    float factor = 1.5; // aumentar la intensidad en un 50%
+    float alpha = 1.05; // Factor de realce
 
     for (int i = inicio; i < fin; i++)
     {
@@ -371,11 +382,18 @@ void *filtro(void *arg)
                 for (k = 0; k < 3; k++)
                     imagen->pixel[i][j][k] = (unsigned char)temp;
             }
-            if (opcion == 3)
+            if (opcion == 4)
             {
 
                 for (k = 0; k < 3; k++)
                     imagen->pixel[i][j][k] = 255 - imagen->pixel[i][j][k];
+            }
+
+            if (opcion == 3)
+            {
+
+                int valor = (int)(imagen->pixel[i][j][k] * factor);
+                imagen->pixel[i][j][k] = (valor > 255) ? 255 : (unsigned char)valor;
             }
 
             // Procesar pixel (i,j) de la imagen según la opción de filtro elegida
