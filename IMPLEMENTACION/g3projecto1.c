@@ -2,10 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <unistd.h>
 
 #include <pthread.h>
-
 
 typedef struct BMP
 {
@@ -27,7 +26,8 @@ typedef struct BMP
     unsigned char ***pixel;     // Puntero a una tabla dinamica de caracteres de 3 dimensiones para almacenar los pixeles
 } BMP;
 
-typedef struct datos_hilo_t {
+typedef struct datos_hilo_t
+{
     BMP *imagen;
     int filtro;
     int inicio;
@@ -40,128 +40,107 @@ BMP img;
 //*****************************************************************
 // DECLARACIÓN DE FUNCIONES
 //*****************************************************************
-void abrir_imagen(BMP *imagen, char ruta[]);    // Función para abrir la imagen BMP
-void crear_imagen(BMP *imagen, char ruta[]);    // Función para crear una imagen BMP
-void convertir_imagen(BMP *imagen, int nhilos,int opcion); // 2 sera el numero de hilos
+void abrir_imagen(BMP *imagen, char ruta[]);                // Función para abrir la imagen BMP
+void crear_imagen(BMP *imagen, char ruta[]);                // Función para crear una imagen BMP
+void convertir_imagen(BMP *imagen, int nhilos, int opcion); // 2 sera el numero de hilos
 
 void *filtro(void *arg);
-
 
 int main(int argc, char *argv[])
 {
 
-    // if (argc != 9)
-    // {
-    //     printf("Los argumentos del progrma son los siguientes: ./imgconc –i [Imagen de entrada] –t [Imagen de salida] –o [Opción (1,2 o 3)] –h [Numero de hilos]");
-    //     exit(1);
-    // }
-
-    // if ((strcmp(argv[1], "-i")!= 0) )
-    // {
-    //     printf("El argumento para la imagen de entrada es '-i' ");
-    //     exit(1);
-    // }
-
-    // if ((strcmp(argv[3], "-t") != 0) )
-    // {
-    //     printf("El argumento para la imagen de salida es '-t' ");
-    //     exit(1);
-    // }
-    // if ((strcmp(argv[5], "-o") != 0))
-    // {
-    //     printf("El argumento para la opción de filtro es '-o' ");
-    //     exit(1);
-    // }
-    // if ((strcmp(argv[7], "-h") != 0))
-    // {
-    //     printf("El argumento para el numero de hilos es '-h' ");
-    //     exit(1);
-    // }
-
-    // char *nomImagenEntrada = argv[2];
-    // char *nomImagenSalida = argv[4];
-    // int filtro = atoi(argv[6]);
-    // int nHilos = atoi(argv[8]);
-
-
-
-    char* nomImagenEntrada = NULL;
-    char* nomImagenSalida = NULL;
+    char *nomImagenEntrada = NULL;
+    char *nomImagenSalida = NULL;
     int filtro = 0;
     int nHilos = 0;
 
-    if (argc != 9) {
+    if (argc != 9)
+    {
         printf("Invalid number of arguments. Usage: ./imgconc –i imagenIn –t imagenOut –o opción –h nhilos\n");
         return 1;
     }
 
-    for (int i = 1; i < argc; i += 2) {
-        if (strcmp(argv[i], "-i") == 0) {
-            nomImagenEntrada = argv[i+1];
-        } else if (strcmp(argv[i], "-t") == 0) {
-            nomImagenSalida = argv[i+1];
-        } else if (strcmp(argv[i], "-o") == 0) {
-            filtro = atoi(argv[i+1]);
-        } else if (strcmp(argv[i], "-h") == 0) {
-            nHilos = atoi(argv[i+1]);
-        } else {
+    for (int i = 1; i < argc; i += 2)
+    {
+        if (strcmp(argv[i], "-i") == 0)
+        {
+            nomImagenEntrada = argv[i + 1];
+        }
+        else if (strcmp(argv[i], "-t") == 0)
+        {
+            nomImagenSalida = argv[i + 1];
+        }
+        else if (strcmp(argv[i], "-o") == 0)
+        {
+            filtro = atoi(argv[i + 1]);
+        }
+        else if (strcmp(argv[i], "-h") == 0)
+        {
+            nHilos = atoi(argv[i + 1]);
+        }
+        else
+        {
             printf("Invalid argument: %s\n", argv[i]);
             return 1;
         }
     }
 
-    if (!nomImagenEntrada || !nomImagenSalida || !filtro || nHilos <= 0) {
+    if (!nomImagenEntrada || !nomImagenSalida || !filtro || nHilos <= 0)
+    {
         printf("Missing or invalid arguments. Usage: ./imgconc –i imagenIn –t imagenOut –o opción –h nhilos\n");
         return 1;
     }
 
-   
     char *extension = ".bmp"; // Extension to check for
-    
+
     int len_filename = strlen(nomImagenEntrada); // Get the length of the filename string
-    int len_extension = strlen(extension); // Get the length of the extension string
-    
-    if (len_filename >= len_extension && !strcmp(nomImagenEntrada + len_filename - len_extension, extension)) {
+    int len_extension = strlen(extension);       // Get the length of the extension string
+
+    if (len_filename >= len_extension && !strcmp(nomImagenEntrada + len_filename - len_extension, extension))
+    {
         printf("El archivo de entrada termina con %s\n", extension);
-    } else {
+    }
+    else
+    {
         printf("El archivo de entrada no termina con  %s\n", extension);
         return 1;
     }
 
     len_filename = strlen(nomImagenSalida);
 
-    if (len_filename >= len_extension && !strcmp(nomImagenSalida + len_filename - len_extension, extension)) {
+    if (len_filename >= len_extension && !strcmp(nomImagenSalida + len_filename - len_extension, extension))
+    {
         printf("El archivo de salida termina con %s\n", extension);
-    } else {
+    }
+    else
+    {
         printf("El archivo de salida no termina con  %s\n", extension);
         return 1;
     }
 
-
-
+    if (filtro != 1 && filtro != 2 && filtro != 3 && filtro != 4)
+    {
+        printf("Las opciones de filtro son: 1 -> Escala de grises, 2-> Blanco y negro & 3-> realce ");
+        return 1;
+    }
 
     // Process the images and filtros with the given number of threads
 
-    
-    abrir_imagen(&img,nomImagenEntrada);
+    abrir_imagen(&img, nomImagenEntrada);
     printf("\n*************************************************************************");
-	printf("\nIMAGEN: %s",nomImagenEntrada);
-	printf("\n*************************************************************************");
-	printf("\nDimensiones de la imágen:\tAlto=%d\tAncho=%d\n",img.alto,img.ancho);
-    convertir_imagen(&img,nHilos,filtro); //2 sera el numero de hilos		
+    printf("\nIMAGEN: %s", nomImagenEntrada);
+    printf("\n*************************************************************************");
+    printf("\nDimensiones de la imágen:\tAlto=%d\tAncho=%d\n", img.alto, img.ancho);
+    convertir_imagen(&img, nHilos, filtro); // 2 sera el numero de hilos
 
-    	//***************************************************************************************************************************
-	//1 Crear la imágen BMP a partir del arreglo img.pixel[][]
-	//***************************************************************************************************************************	
-	crear_imagen(&img, nomImagenSalida);
-	printf("\nImágen BMP tratada en el archivo: %s\n",nomImagenSalida);
-	
-	//Terminar programa normalmente	
-	exit (0);	
+    //***************************************************************************************************************************
+    // 1 Crear la imágen BMP a partir del arreglo img.pixel[][]
+    //***************************************************************************************************************************
+    crear_imagen(&img, nomImagenSalida);
+    printf("\nImágen BMP tratada en el archivo: %s\n", nomImagenSalida);
 
-
-
-
+    // Terminar programa normalmente
+    exit(0);
 }
 
 void abrir_imagen(BMP *imagen, char *ruta)
@@ -243,37 +222,31 @@ void abrir_imagen(BMP *imagen, char *ruta)
 }
 
 //********************************************************************w*******************************************************************************
-//Función para crear una imagen BMP, a partir de la estructura imagen imagen (Arreglo de bytes de alto*ancho  --- 1 Byte por pixel 0-255)
-//Parametros de entrada: Referencia a un BMP (Estructura BMP), Referencia a la cadena ruta char ruta[]=char *ruta
-//Parametro que devuelve: Ninguno
+// Función para crear una imagen BMP, a partir de la estructura imagen imagen (Arreglo de bytes de alto*ancho  --- 1 Byte por pixel 0-255)
+// Parametros de entrada: Referencia a un BMP (Estructura BMP), Referencia a la cadena ruta char ruta[]=char *ruta
+// Parametro que devuelve: Ninguno
 //****************************************************************************************************************************************************
-
-
 
 // void convertir_imagen(BMP *imagen, int nhilos, int opcion)
 // {
 //     int t, rc;
 
-
-
-//     pthread_t threads[nhilos]; 
+//     pthread_t threads[nhilos];
 
 //     BMP *imgArr [nhilos];
-
 
 //     for (int i = 0; i < imagen->alto; i++)
 //     {
 //         for (int j = 0; j < imagen->ancho; j++)
 //         {
-            
+
 //         }
-        
+
 //     }
-    
 
 //     for (t = 0; t < nhilos; t++)
 //     {
- 
+
 //         if (opcion == 1)
 //         {
 //             rc = pthread_create(&threads[t], NULL, filtro1, (void *)&imagen);
@@ -302,36 +275,44 @@ void abrir_imagen(BMP *imagen, char *ruta)
 //             }
 //         }
 //         }
-    
+
 //     for (t = 0; t < nhilos; t++)
 //     {
 //         pthread_join(threads[t], NULL);
 //     }
 // }
 
-
 void convertir_imagen(BMP *imagen, int nHilos, int opcion)
 {
     pthread_t hilos[nHilos];
-    int altura_seccion = imagen->alto / nHilos;
+    int altura_seccion = imagen->alto;
     int resto = imagen->alto % nHilos;
+    int inicio = 0, final = 0;
+    int alturaAux = altura_seccion;
 
     for (int i = 0; i < nHilos; i++)
     {
-        int inicio = i * altura_seccion;
-        int fin = inicio + altura_seccion;
-        if (i == nHilos - 1) // En el último hilo, procesamos también el resto
+        inicio = final;
+        if (alturaAux % nHilos != 0)
         {
-            fin += resto;
+            alturaAux -= 1;
+            final += (alturaAux / nHilos) + 1;
         }
+        else
+        {
+            final += (alturaAux / nHilos);
+        }
+
+        printf("Inicio es: %d y Final es: %d \n", inicio, final);
         // Creamos una estructura de datos que contendrá los datos necesarios
         // para que el hilo procese su sección de la imagen
         datos_hilo_t *datos_hilo = malloc(sizeof(datos_hilo_t));
         datos_hilo->imagen = imagen;
         datos_hilo->inicio = inicio;
-        datos_hilo->fin = fin;
+        datos_hilo->fin = final;
         datos_hilo->opcion = opcion;
         pthread_create(&hilos[i], NULL, filtro, datos_hilo);
+
     }
 
     for (int i = 0; i < nHilos; i++)
@@ -339,8 +320,6 @@ void convertir_imagen(BMP *imagen, int nHilos, int opcion)
         pthread_join(hilos[i], NULL);
     }
 }
-
-
 
 void *filtro(void *arg)
 {
@@ -351,29 +330,38 @@ void *filtro(void *arg)
     int opcion = datos_hilo->opcion;
     unsigned char temp;
     int k;
+    float factor = 1.5; // aumentar la intensidad en un 50%
+    float alpha = 1.05; // Factor de realce
 
     for (int i = inicio; i < fin; i++)
     {
         for (int j = 0; j < imagen->ancho; j++)
         {
-            if (opcion==1)
+            if (opcion == 1)
             {
-                temp = (unsigned char)((imagen->pixel[i][j][2]*0.3)+(imagen->pixel[i][j][1]*0.59)+ (imagen->pixel[i][j][0]*0.11));
-                for (k=0;k<3;k++) imagen->pixel[i][j][k]= (unsigned char)temp; 	//Formula correcta
-
-            }if (opcion==2)
-            {
-                temp = (unsigned char)(((imagen->pixel[i][j][2])+(imagen->pixel[i][j][1])+ (imagen->pixel[i][j][0]))/3);
-                for (k=0;k<3;k++) imagen->pixel[i][j][k]= (unsigned char)temp;
-                
-            }if(opcion == 3){
-
-                
-                for (k=0;k<3;k++) imagen->pixel[i][j][k]= 255-imagen->pixel[i][j][k]; 
-
+                temp = (unsigned char)((imagen->pixel[i][j][2] * 0.3) + (imagen->pixel[i][j][1] * 0.59) + (imagen->pixel[i][j][0] * 0.11));
+                for (k = 0; k < 3; k++)
+                    imagen->pixel[i][j][k] = (unsigned char)temp; // Formula correcta
             }
-            
-            
+            if (opcion == 2)
+            {
+                temp = (unsigned char)(((imagen->pixel[i][j][2]) + (imagen->pixel[i][j][1]) + (imagen->pixel[i][j][0])) / 3);
+                for (k = 0; k < 3; k++)
+                    imagen->pixel[i][j][k] = (unsigned char)temp;
+            }
+            if (opcion == 4)
+            {
+
+                for (k = 0; k < 3; k++)
+                    imagen->pixel[i][j][k] = 255 - imagen->pixel[i][j][k];
+            }
+
+            if (opcion == 3)
+            {
+
+                int valor = (int)(imagen->pixel[i][j][k] * factor);
+                imagen->pixel[i][j][k] = (valor > 255) ? 255 : (unsigned char)valor;
+            }
 
             // Procesar pixel (i,j) de la imagen según la opción de filtro elegida
             // ...
@@ -386,81 +374,75 @@ void *filtro(void *arg)
 
 void crear_imagen(BMP *imagen, char ruta[])
 {
-	FILE *archivo;	//Puntero FILE para el archivo de imágen a abrir
+    FILE *archivo; // Puntero FILE para el archivo de imágen a abrir
 
-	int i,j,k;
+    int i, j, k;
 
-	//Abrir el archivo de imágen
-	archivo = fopen( ruta, "wb+" );
-	if(!archivo)
-	{ 
-		//Si la imágen no se encuentra en la ruta dada
-		printf( "La imágen %s no se pudo crear\n",ruta);
-		exit(1);
-	}
-	
-	//Escribir la cabecera de la imagen en el archivo
-	fseek( archivo,0, SEEK_SET);
-	fwrite(&imagen->bm,sizeof(char),2, archivo);
-	fwrite(&imagen->tamano,sizeof(int),1, archivo);	
-	fwrite(&imagen->reservado,sizeof(int),1, archivo);	
-	fwrite(&imagen->offset,sizeof(int),1, archivo);	
-	fwrite(&imagen->tamanoMetadatos,sizeof(int),1, archivo);	
-	fwrite(&imagen->alto,sizeof(int),1, archivo);	
-	fwrite(&imagen->ancho,sizeof(int),1, archivo);	
-	fwrite(&imagen->numeroPlanos,sizeof(short int),1, archivo);	
-	fwrite(&imagen->profundidadColor,sizeof(short int),1, archivo);	
-	fwrite(&imagen->tipoCompresion,sizeof(int),1, archivo);
-	fwrite(&imagen->tamanoEstructura,sizeof(int),1, archivo);
-	fwrite(&imagen->pxmh,sizeof(int),1, archivo);
-	fwrite(&imagen->pxmv,sizeof(int),1, archivo);
-	fwrite(&imagen->coloresUsados,sizeof(int),1, archivo);
-	fwrite(&imagen->coloresImportantes,sizeof(int),1, archivo);	
-			
-	//Pasar la imágen del arreglo reservado en escala de grises a el archivo (Deben escribirse los valores BGR)
-	for (i=0;i<imagen->alto;i++)
-	{
-		for (j=0;j<imagen->ancho;j++)
-		{  
+    // Abrir el archivo de imágen
+    archivo = fopen(ruta, "wb+");
+    if (!archivo)
+    {
+        // Si la imágen no se encuentra en la ruta dada
+        printf("La imágen %s no se pudo crear\n", ruta);
+        exit(1);
+    }
 
-                    for (k=0;k<3;k++)
-		       fwrite(&imagen->pixel[i][j][k],sizeof(char),1, archivo);  //Escribir el Byte Blue del pixel 
-		    
-		    
-		}   
-	}
-	//Cerrrar el archivo
-	fclose(archivo);
+    // Escribir la cabecera de la imagen en el archivo
+    fseek(archivo, 0, SEEK_SET);
+    fwrite(&imagen->bm, sizeof(char), 2, archivo);
+    fwrite(&imagen->tamano, sizeof(int), 1, archivo);
+    fwrite(&imagen->reservado, sizeof(int), 1, archivo);
+    fwrite(&imagen->offset, sizeof(int), 1, archivo);
+    fwrite(&imagen->tamanoMetadatos, sizeof(int), 1, archivo);
+    fwrite(&imagen->alto, sizeof(int), 1, archivo);
+    fwrite(&imagen->ancho, sizeof(int), 1, archivo);
+    fwrite(&imagen->numeroPlanos, sizeof(short int), 1, archivo);
+    fwrite(&imagen->profundidadColor, sizeof(short int), 1, archivo);
+    fwrite(&imagen->tipoCompresion, sizeof(int), 1, archivo);
+    fwrite(&imagen->tamanoEstructura, sizeof(int), 1, archivo);
+    fwrite(&imagen->pxmh, sizeof(int), 1, archivo);
+    fwrite(&imagen->pxmv, sizeof(int), 1, archivo);
+    fwrite(&imagen->coloresUsados, sizeof(int), 1, archivo);
+    fwrite(&imagen->coloresImportantes, sizeof(int), 1, archivo);
+
+    // Pasar la imágen del arreglo reservado en escala de grises a el archivo (Deben escribirse los valores BGR)
+    for (i = 0; i < imagen->alto; i++)
+    {
+        for (j = 0; j < imagen->ancho; j++)
+        {
+
+            for (k = 0; k < 3; k++)
+                fwrite(&imagen->pixel[i][j][k], sizeof(char), 1, archivo); // Escribir el Byte Blue del pixel
+        }
+    }
+    // Cerrrar el archivo
+    fclose(archivo);
 }
-
 
 // void *filtro1(BMP *imagen){
 
-//     int i,j,k;  
+//     int i,j,k;
 //     unsigned char temp;
 
 //         for (i=0;i<imagen->alto;i++) {
-//             for (j=0;j<imagen->ancho;j++) {  
+//             for (j=0;j<imagen->ancho;j++) {
 //                 temp = (unsigned char)((imagen->pixel[i][j][2]*0.3)+(imagen->pixel[i][j][1]*0.59)+ (imagen->pixel[i][j][0]*0.11));
 //                 for (k=0;k<3;k++) imagen->pixel[i][j][k]= (unsigned char)temp; 	//Formula correcta
-//             }   
+//             }
 //         }
-
-    
 
 // }
 
 // void *filtro2(BMP *imagen){
 
-//     int i,j,k;  
+//     int i,j,k;
 //     unsigned char temp;
 
 // }
 
-
 // void *filtro3(BMP *imagen){
 
-//     int i,j,k;  
+//     int i,j,k;
 //     unsigned char temp;
 
 // }
