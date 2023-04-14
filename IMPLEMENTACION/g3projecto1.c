@@ -49,39 +49,6 @@ void *filtro(void *arg);
 int main(int argc, char *argv[])
 {
 
-    // if (argc != 9)
-    // {
-    //     printf("Los argumentos del progrma son los siguientes: ./imgconc –i [Imagen de entrada] –t [Imagen de salida] –o [Opción (1,2 o 3)] –h [Numero de hilos]");
-    //     exit(1);
-    // }
-
-    // if ((strcmp(argv[1], "-i")!= 0) )
-    // {
-    //     printf("El argumento para la imagen de entrada es '-i' ");
-    //     exit(1);
-    // }
-
-    // if ((strcmp(argv[3], "-t") != 0) )
-    // {
-    //     printf("El argumento para la imagen de salida es '-t' ");
-    //     exit(1);
-    // }
-    // if ((strcmp(argv[5], "-o") != 0))
-    // {
-    //     printf("El argumento para la opción de filtro es '-o' ");
-    //     exit(1);
-    // }
-    // if ((strcmp(argv[7], "-h") != 0))
-    // {
-    //     printf("El argumento para el numero de hilos es '-h' ");
-    //     exit(1);
-    // }
-
-    // char *nomImagenEntrada = argv[2];
-    // char *nomImagenSalida = argv[4];
-    // int filtro = atoi(argv[6]);
-    // int nHilos = atoi(argv[8]);
-
     char *nomImagenEntrada = NULL;
     char *nomImagenSalida = NULL;
     int filtro = 0;
@@ -325,7 +292,6 @@ void convertir_imagen(BMP *imagen, int nHilos, int opcion)
 
     for (int i = 0; i < nHilos; i++)
     {
-
         inicio = final;
         if (alturaAux % nHilos != 0)
         {
@@ -346,6 +312,7 @@ void convertir_imagen(BMP *imagen, int nHilos, int opcion)
         datos_hilo->fin = final;
         datos_hilo->opcion = opcion;
         pthread_create(&hilos[i], NULL, filtro, datos_hilo);
+
     }
 
     for (int i = 0; i < nHilos; i++)
